@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Trade Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --primary: #2962ff;
+            --secondary: #0d47a1;
+            --success: #00c853;
+            --danger: #ff1744;
+            --warning: #ffab00;
+            --dark: #121826;
+            --light: #f5f8fa;
+            --gray: #2d3748;
+            --card-bg: #1e293b;
+            --header-gradient: linear-gradient(135deg, #1a2a6c, #2a5298);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            scroll-behavior: smooth;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: var(--header-gradient);
+            border-radius: 15px;
+            padding: 25px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(41, 98, 255, 0.1) 0%, rgba(41, 98, 255, 0) 70%);
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        
+        header p {
+            color: #cbd5e1;
+            max-width: 700px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        
+        .card h2 i {
+            color: var(--primary);
+        }
+        
+        .portfolio-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4ade80;
+        }
+        
+        .profit-loss {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        
+        .profit {
+            color: var(--success);
+        }
+        
+        .loss {
+            color: var(--danger);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (min-width: 992px) {
+            .content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(41, 98, 255, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(41, 98, 255, 0.1);
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #009624;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background: #e69900;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #d50000;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background: rgba(30, 41, 59, 0.8);
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:nth-child(even) {
+            background: rgba(30, 41, 59, 0.5);
+        }
+        
+        tr:hover {
+            background: rgba(41, 98, 255, 0.1);
+        }
+        
+        .positive {
+            color: var(--success);
+            font-weight: 600;
+        }
+        
+        .negative {
+            color: var(--danger);
+            font-weight: 600;
+        }
+        
+        .trade-type {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .buy {
+            background: rgba(0, 200, 83, 0.2);
+            color: var(--success);
+        }
+        
+        .sell {
+            background: rgba(255, 23, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.3);
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 25px;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            background: var(--primary);
+        }
+        
+        .tab:hover:not(.active) {
+            background: rgba(41, 98, 255, 0.3);
+        }
+        
+        .btc { background: #f7931a; }
+        .eth { background: #627eea; }
+        .bnb { background: #f3ba2f; }
+        .sol { background: #00ffa3; }
+        .ada { background: #0033ad; }
+        .doge { background: #c2a633; }
+        .dot { background: #e6007a; }
+        .xrp { background: #23292f; }
+        
+        .profit-percentage {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .profit-percentage.positive {
+            background: rgba(0, 200, 83, 0.15);
+        }
+        
+        .profit-percentage.negative {
+            background: rgba(255, 23, 68, 0.15);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--gray);
+        }
+        
+        .summary-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-card {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-card-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-row {
+                flex-direction: column;
+            }
+            
+            header h1 {
+                font-size: 2.2rem;
+            }
+        }
+        
+        .coin-amount {
+            font-weight: bold;
+            color: #e2e8f0;
+        }
+        
+        .coin-unit {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            background: rgba(41, 98, 255, 0.2);
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+        
+        .highlight {
+            animation: highlight 2s ease;
+        }
+        
+        @keyframes highlight {
+            0% { background: rgba(41, 98, 255, 0.3); }
+            100% { background: transparent; }
+        }
+        
+        .section-anchor {
+            position: absolute;
+            top: -100px;
+            visibility: hidden;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background: var(--success);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: var(--danger);
+        }
+        
+        .trade-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: rgba(41, 98, 255, 0.15);
+            color: var(--primary);
+        }
+        
+        .status-closed {
+            background: rgba(0, 200, 83, 0.15);
+            color: var(--success);
+        }
+        
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            margin: 2px;
+        }
+        
+        .action-btn:hover {
+            background: rgba(41, 98, 255, 0.1);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .edit-sell-btn {
+            background: rgba(255, 23, 68, 0.1);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+        
+        .edit-sell-btn:hover {
+            background: rgba(255, 23, 68, 0.2);
+        }
+        
+        .delete-btn {
+            background: rgba(255, 23, 68, 0.1);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+        
+        .delete-btn:hover {
+            background: rgba(255, 23, 68, 0.2);
+        }
+        
+        .actions-container {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .confirmation-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .modal-buttons .btn {
+            flex: 1;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .search-container input {
+            padding-left: 40px;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 12px;
+            color: #94a3b8;
+        }
+        
+        .calculator-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .calculator-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .calculator-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .calc-group {
+            margin-bottom: 20px;
+        }
+        
+        .calc-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .calc-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .calc-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.3);
+        }
+        
+        .calc-result {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .calc-result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .calc-result-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .calc-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .positive-result {
+            color: var(--success);
+        }
+        
+        .negative-result {
+            color: var(--danger);
+        }
+        
+        .calculator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-calc {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close-calc:hover {
+            color: var(--danger);
+        }
+        
+        .calculator-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 0 5px;
+        }
+        
+        .calculator-btn:hover {
+            background: rgba(41, 98, 255, 0.1);
+        }
+        
+        /* Calculator UI Styles */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .calc-display {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: right;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            min-height: 60px;
+            overflow: hidden;
+        }
+        
+        .calc-btn {
+            background: rgba(30, 41, 59, 0.7);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 15px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .calc-btn:hover {
+            background: rgba(41, 98, 255, 0.3);
+        }
+        
+        .calc-btn.operator {
+            background: rgba(41, 98, 255, 0.5);
+        }
+        
+        .calc-btn.equals {
+            background: var(--success);
+        }
+        
+        .calc-btn.clear {
+            background: var(--danger);
+        }
+        
+        .calc-btn.span-two {
+            grid-column: span 2;
+        }
+        
+        .calc-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .calc-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .calc-tab.active {
+            background: var(--primary);
+        }
+        
+        .calc-section {
+            display: none;
+        }
+        
+        .calc-section.active {
+            display: block;
+        }
+        
+        .compound-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .compound-row input {
+            flex: 1;
+        }
+        
+        .compound-row select {
+            width: 120px;
+        }
+        
+        .compound-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .compound-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+        }
+        
+        .compound-table th, 
+        .compound-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .compound-table th {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        
+        .price-update {
+            animation: priceUpdate 1s ease;
+        }
+        
+        @keyframes priceUpdate {
+            0% { background: rgba(41, 98, 255, 0.3); }
+            100% { background: transparent; }
+        }
+        
+        .realtime-profit {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i> Trade added successfully!
+    </div>
+    
+    <div class="confirmation-modal" id="confirmationModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h3>
+            <p id="modalMessage">Are you sure you want to delete this trade? This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                <button class="btn btn-outline" id="cancelDeleteBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="calculator-modal" id="calculatorModal">
+        <div class="calculator-content">
+            <div class="calculator-header">
+                <h3><i class="fas fa-calculator"></i> Calculator</h3>
+                <button class="close-calc" id="closeCalcBtn">&times;</button>
+            </div>
+            
+            <div class="calc-tabs">
+                <div class="calc-tab active" data-tab="basic">Basic</div>
+                <div class="calc-tab" data-tab="compound">Compounding</div>
+                <div class="calc-tab" data-tab="trade">Trade</div>
+            </div>
+            
+            <!-- Basic Calculator -->
+            <div class="calc-section active" id="basic-calc">
+                <div class="calc-display" id="display">0</div>
+                <div class="calculator-grid">
+                    <button class="calc-btn clear" data-action="clear">C</button>
+                    <button class="calc-btn" data-action="backspace">⌫</button>
+                    <button class="calc-btn operator" data-action="percentage">%</button>
+                    <button class="calc-btn operator" data-action="divide">÷</button>
+                    <button class="calc-btn" data-action="7">7</button>
+                    <button class="calc-btn" data-action="8">8</button>
+                    <button class="calc-btn" data-action="9">9</button>
+                    <button class="calc-btn operator" data-action="multiply">×</button>
+                    <button class="calc-btn" data-action="4">4</button>
+                    <button class="calc-btn" data-action="5">5</button>
+                    <button class="calc-btn" data-action="6">6</button>
+                    <button class="calc-btn operator" data-action="subtract">−</button>
+                    <button class="calc-btn" data-action="1">1</button>
+                    <button class="calc-btn" data-action="2">2</button>
+                    <button class="calc-btn" data-action="3">3</button>
+                    <button class="calc-btn operator" data-action="add">+</button>
+                    <button class="calc-btn span-two" data-action="0">0</button>
+                    <button class="calc-btn" data-action="decimal">.</button>
+                    <button class="calc-btn equals" data-action="equals">=</button>
+                </div>
+            </div>
+            
+            <!-- Compounding Calculator -->
+            <div class="calc-section" id="compound-calc">
+                <div class="form-group">
+                    <label>Initial Investment ($)</label>
+                    <input type="number" id="initialInvestment" class="calc-input" placeholder="Enter amount" value="1000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Interest Rate</label>
+                    <div class="compound-row">
+                        <input type="number" id="interestRate" class="calc-input" placeholder="Enter rate" value="8">
+                        <select id="interestPeriod" class="calc-input">
+                            <option value="daily">Daily (%)</option>
+                            <option value="weekly">Weekly (%)</option>
+                            <option value="monthly" selected>Monthly (%)</option>
+                            <option value="annually">Annual (%)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Compounding Frequency</label>
+                    <select id="compoundingFreq" class="calc-input">
+                        <option value="365">Daily</option>
+                        <option value="52">Weekly</option>
+                        <option value="12" selected>Monthly</option>
+                        <option value="4">Quarterly</option>
+                        <option value="1">Annually</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Compounding Period</label>
+                    <div class="compound-row">
+                        <input type="number" id="timePeriod" class="calc-input" placeholder="Enter time" value="5">
+                        <select id="timePeriodType" class="calc-input">
+                            <option value="days">Days</option>
+                            <option value="months">Months</option>
+                            <option value="years" selected>Years</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Additional Contribution per Period ($)</label>
+                    <input type="number" id="periodContribution" class="calc-input" placeholder="Enter amount" value="100">
+                </div>
+                
+                <button class="btn" id="calculateCompoundBtn" style="width: 100%;">
+                    <i class="fas fa-calculator"></i> Calculate
+                </button>
+                
+                <div class="compound-result" id="compoundResult">
+                    <div class="calc-result-item">
+                        <span>Final Balance:</span>
+                        <span class="calc-value" id="finalBalance">$0.00</span>
+                    </div>
+                    <div class="calc-result-item">
+                        <span>Total Contributions:</span>
+                        <span class="calc-value" id="totalContributions">$0.00</span>
+                    </div>
+                    <div class="calc-result-item">
+                        <span>Total Interest Earned:</span>
+                        <span class="calc-value" id="totalInterest">$0.00</span>
+                    </div>
+                </div>
+                
+                <table class="compound-table" id="compoundTable">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>Start Balance</th>
+                            <th>Contributions</th>
+                            <th>Interest</th>
+                            <th>End Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compoundTableBody">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Trade Calculator -->
+            <div class="calc-section" id="trade-calc">
+                <div class="form-group">
+                    <label>Buy Price per Coin</label>
+                    <input type="number" id="tradeBuyPrice" class="calc-input" placeholder="Enter buy price" step="any">
+                </div>
+                
+                <div class="form-group">
+                    <label>Sell Price per Coin</label>
+                    <input type="number" id="tradeSellPrice" class="calc-input" placeholder="Enter sell price" step="any">
+                </div>
+                
+                <div class="form-group">
+                    <label>Coin Amount</label>
+                    <input type="number" id="tradeCoinAmount" class="calc-input" placeholder="Enter coin amount" step="any" value="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>Fee Percentage</label>
+                    <input type="number" id="tradeFeePercent" class="calc-input" placeholder="Enter fee percentage" step="any" value="0.1">
+                </div>
+                
+                <button class="btn" id="calculateTradeBtn" style="width: 100%;">
+                    <i class="fas fa-calculator"></i> Calculate Profit
+                </button>
+                
+                <div class="calc-result">
+                    <div class="calc-result-item">
+                        <span>Investment:</span>
+                        <span class="calc-value" id="calcInvestment">$0.00</span>
+                    </div>
+                    <div class="calc-result-item">
+                        <span>Revenue:</span>
+                        <span class="calc-value" id="calcRevenue">$0.00</span>
+                    </div>
+                    <div class="calc-result-item">
+                        <span>Fees:</span>
+                        <span class="calc-value" id="calcFees">$0.00</span>
+                    </div>
+                    <div class="calc-result-item">
+                        <span>Profit/Loss:</span>
+                        <span class="calc-value" id="calcTradeProfit">$0.00</span>
+                    </div>
+                    <div class="calc-result-item">
+                        <span>ROI:</span>
+                        <span class="calc-value" id="calcTradeROI">0.00%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1><i class="fas fa-coins"></i> Crypto Trade Tracker</h1>
+                <p>Track your cryptocurrency trades with active/closed status and real-time profit calculations</p>
+            </div>
+        </header>
+        
+        <div class="summary-row">
+            <div class="summary-card">
+                <div class="summary-value profit" id="total-profit">+$6,284.65</div>
+                <div class="summary-label">Total Profit</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="total-fees">$1,285.50</div>
+                <div class="summary-label">Total Fees Paid</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="average-roi">34.36%</div>
+                <div class="summary-label">Average ROI</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" id="trades-tab" data-tab="trades">Trade History</div>
+            <div class="tab" id="performance-tab" data-tab="performance">Performance</div>
+        </div>
+        
+        <div class="card" id="trades-section">
+            <div class="section-title">
+                <h2><i class="fas fa-exchange-alt"></i> Trade History</h2>
+                <button class="btn" id="addTradeBtn"><i class="fas fa-plus"></i> Add Trade</button>
+            </div>
+            
+            <div class="table-container">
+                <table id="tradesTable">
+                    <thead>
+                        <tr>
+                            <th>Coin</th>
+                            <th>Coins</th>
+                            <th>Buy Date</th>
+                            <th>Buy Price</th>
+                            <th>Buy Fee</th>
+                            <th>Total Bought</th>
+                            <th>Current Price</th>
+                            <th>Sell Date</th>
+                            <th>Sell Price</th>
+                            <th>Sell Fee</th>
+                            <th>Total Sold</th>
+                            <th>Profit/Loss</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                            <th>Calculator</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tradesTableBody">
+                        <!-- Trades will be populated here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="active-trades-count">3</div>
+                    <div class="stat-card-label">Active Trades</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="closed-trades-count">3</div>
+                    <div class="stat-card-label">Closed Trades</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value profit" id="total-profit-mini">+$315.95</div>
+                    <div class="stat-card-label">Total Profit</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="total-fees-mini">$45.75</div>
+                    <div class="stat-card-label">Total Fees Paid</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="card" id="trade-form-container">
+                <div class="section-title">
+                    <h2><i class="fas fa-plus-circle"></i> Add/Edit Trade</h2>
+                    <div class="trade-status" id="form-status-indicator">New Trade</div>
+                </div>
+                
+                <form id="tradeForm">
+                    <input type="hidden" id="tradeId" value="">
+                    <input type="hidden" id="activeTradeId" value="">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tradeType">Trade Type</label>
+                            <select id="tradeType" required>
+                                <option value="buy">Buy</option>
+                                <option value="sell">Sell</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="asset">Asset</label>
+                            <div class="search-container">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="assetSearch" placeholder="Search asset..." autocomplete="off">
+                            </div>
+                            <select id="asset" size="5" required>
+                                <!-- Assets will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="coinAmount">Coin Amount</label>
+                            <input type="number" id="coinAmount" step="any" min="0" placeholder="Enter coin amount" required>
+                            <div class="coin-unit" id="coinUnit">BTC</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="price">Price per Coin (USD)</label>
+                            <input type="number" id="price" step="any" min="0" placeholder="Enter price" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="date">Date & Time</label>
+                            <input type="datetime-local" id="date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="fee" id="feeLabel">Fee (BTC)</label>
+                            <input type="number" id="fee" step="any" min="0" placeholder="Enter fee" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="activeTradesContainer" style="display: none;">
+                        <label for="activeTrades">Select Active Trade to Close</label>
+                        <select id="activeTrades">
+                            <option value="">Select an active trade</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <button type="submit" class="btn" style="flex: 1;">
+                            <i class="fas fa-save"></i> Save Trade
+                        </button>
+                        <button type="button" class="btn btn-outline" id="cancelBtn" style="flex: 1;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <div class="section-title">
+                    <h2><i class="fas fa-chart-pie"></i> Portfolio Allocation</h2>
+                    <button class="btn btn-outline" id="refreshAllocationBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="allocationChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" id="performance-section">
+            <div class="section-title">
+                <h2><i class="fas fa-chart-line"></i> Portfolio Performance</h2>
+                <div>
+                    <button class="btn btn-outline" id="btn-1m">1M</button>
+                    <button class="btn" id="btn-3m">3M</button>
+                    <button class="btn btn-outline" id="btn-1y">1Y</button>
+                    <button class="btn btn-outline" id="btn-all">All</button>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Crypto Trade Tracker &copy; 2023 | Track your trades with precision</p>
+            <p><i class="fas fa-lock"></i> Your data is stored securely and never leaves your device</p>
+            <p><i class="fas fa-info-circle"></i> Real-time prices updated every 3 seconds</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize trade data structure
+        let tradesData = [];
+        let nextTradeId = 1;
+        let tradeToDeleteId = null;
+        let perfChart = null;
+        let allocChart = null;
+        let allBinancePairs = [];
+        let currentDisplay = '0';
+        let firstOperand = null;
+        let operator = null;
+        let waitingForSecondOperand = false;
+        let currentPrices = {};
+        let priceUpdateInterval;
+        
+        // Mock crypto prices for portfolio allocation
+        const cryptoPrices = {
+            BTC: 60000,
+            ETH: 3500,
+            BNB: 500,
+            SOL: 150,
+            ADA: 0.5,
+            XRP: 0.6,
+            DOT: 7,
+            DOGE: 0.15
+        };
+
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load trades from localStorage
+            loadTradesFromStorage();
+            
+            // Initialize allocation chart
+            initAllocationChart();
+            
+            // Initialize performance chart
+            initPerformanceChart();
+            
+            // Initialize calculator
+            initCalculator();
+            
+            // Start price updates
+            startPriceUpdates();
+            
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.id === 'trades-tab') {
+                        document.getElementById('trades-section').scrollIntoView({ behavior: 'smooth' });
+                    } else if (this.id === 'performance-tab') {
+                        document.getElementById('performance-section').scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+            
+            // Calculator tabs
+            document.querySelectorAll('.calc-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.calc-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    document.querySelectorAll('.calc-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-calc`).classList.add('active');
+                });
+            });
+            
+            // Time period buttons
+            document.getElementById('btn-1m').addEventListener('click', function() {
+                document.querySelectorAll('#performance-section .btn').forEach(btn => btn.classList.add('btn-outline'));
+                this.classList.remove('btn-outline');
+                this.classList.add('btn');
+                updatePerformanceChart('1m');
+            });
+            
+            document.getElementById('btn-3m').addEventListener('click', function() {
+                document.querySelectorAll('#performance-section .btn').forEach(btn => btn.classList.add('btn-outline'));
+                this.classList.remove('btn-outline');
+                this.classList.add('btn');
+                updatePerformanceChart('3m');
+            });
+            
+            document.getElementById('btn-1y').addEventListener('click', function() {
+                document.querySelectorAll('#performance-section .btn').forEach(btn => btn.classList.add('btn-outline'));
+                this.classList.remove('btn-outline');
+                this.classList.add('btn');
+                updatePerformanceChart('1y');
+            });
+            
+            document.getElementById('btn-all').addEventListener('click', function() {
+                document.querySelectorAll('#performance-section .btn').forEach(btn => btn.classList.add('btn-outline'));
+                this.classList.remove('btn-outline');
+                this.classList.add('btn');
+                updatePerformanceChart('all');
+            });
+            
+            // Scroll to trade form when Add Trade button is clicked
+            document.getElementById('addTradeBtn').addEventListener('click', function() {
+                resetForm();
+                const tradeForm = document.getElementById('trade-form-container');
+                tradeForm.scrollIntoView({ behavior: 'smooth' });
+                tradeForm.classList.add('highlight');
+                
+                setTimeout(() => {
+                    tradeForm.classList.remove('highlight');
+                }, 2000);
+            });
+            
+            // Cancel button functionality
+            document.getElementById('cancelBtn').addEventListener('click', resetForm);
+            
+            // Update coin unit and fee label when asset changes
+            const assetSelect = document.getElementById('asset');
+            const coinUnit = document.getElementById('coinUnit');
+            const feeLabel = document.getElementById('feeLabel');
+            
+            assetSelect.addEventListener('change', function() {
+                const selectedOption = assetSelect.options[assetSelect.selectedIndex];
+                const coinSymbol = selectedOption.textContent;
+                const baseCoin = coinSymbol.replace('USDT', '');
+                
+                coinUnit.textContent = baseCoin;
+                
+                // Update fee label to match asset only for buy trades
+                if (document.getElementById('tradeType').value === 'buy') {
+                    feeLabel.textContent = `Fee (${baseCoin})`;
+                }
+                
+                // If trade type is sell, update active trades dropdown
+                if (document.getElementById('tradeType').value === 'sell') {
+                    updateActiveTradesDropdown(coinSymbol);
+                }
+            });
+            
+            // Trade type change handler
+            document.getElementById('tradeType').addEventListener('change', function() {
+                const tradeType = this.value;
+                const asset = document.getElementById('asset').value;
+                const activeTradesContainer = document.getElementById('activeTradesContainer');
+                const feeLabel = document.getElementById('feeLabel');
+                
+                if (tradeType === 'sell') {
+                    activeTradesContainer.style.display = 'block';
+                    updateActiveTradesDropdown(asset);
+                    feeLabel.textContent = 'Fee (USDT)';
+                } else {
+                    activeTradesContainer.style.display = 'none';
+                    // Update fee label to match asset
+                    const selectedOption = document.querySelector('#asset option[value="' + asset + '"]');
+                    const coinSymbol = selectedOption.textContent.replace('USDT', '');
+                    feeLabel.textContent = `Fee (${coinSymbol})`;
+                }
+            });
+            
+            // Initialize coin unit and fee label
+            coinUnit.textContent = 'BTC';
+            feeLabel.textContent = 'Fee (BTC)';
+            
+            // Form submission
+            const tradeForm = document.getElementById('tradeForm');
+            tradeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form values
+                const tradeType = document.getElementById('tradeType').value;
+                const asset = document.getElementById('asset').value;
+                const coinAmount = parseFloat(document.getElementById('coinAmount').value);
+                const price = parseFloat(document.getElementById('price').value);
+                const date = document.getElementById('date').value;
+                const fee = parseFloat(document.getElementById('fee').value) || 0;
+                const tradeId = document.getElementById('tradeId').value;
+                const activeTradeId = document.getElementById('activeTradeId').value;
+                
+                // Format date
+                const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                if (tradeType === 'buy') {
+                    // Create a new trade
+                    const newTrade = {
+                        id: tradeId || nextTradeId++,
+                        asset: asset,
+                        coins: coinAmount,
+                        buyDate: formattedDate,
+                        buyPrice: price,
+                        buyFee: fee,
+                        totalBought: coinAmount * price,
+                        sellDate: "",
+                        sellPrice: 0,
+                        sellFee: 0,
+                        totalSold: 0,
+                        profit: 0,
+                        profitPercentage: 0,
+                        status: 'active'
+                    };
+                    
+                    if (tradeId) {
+                        // Update existing trade
+                        const index = tradesData.findIndex(t => t.id == tradeId);
+                        if (index !== -1) {
+                            tradesData[index] = newTrade;
+                        }
+                    } else {
+                        // Add new trade
+                        tradesData.unshift(newTrade);
+                    }
+                } else {
+                    // Sell transaction - update existing trade
+                    let activeTradeIdToClose = activeTradeId || document.getElementById('activeTrades').value;
+                    
+                    if (!activeTradeIdToClose) {
+                        showNotification('Please select an active trade to close', true);
+                        return;
+                    }
+                    
+                    const tradeIndex = tradesData.findIndex(t => t.id == activeTradeIdToClose);
+                    if (tradeIndex !== -1) {
+                        const trade = tradesData[tradeIndex];
+                        
+                        // Update sell details
+                        trade.sellDate = formattedDate;
+                        trade.sellPrice = price;
+                        trade.sellFee = fee;
+                        trade.totalSold = coinAmount * price - fee;
+                        
+                        // Calculate profit
+                        trade.profit = trade.totalSold - trade.totalBought;
+                        trade.profitPercentage = ((trade.profit / trade.totalBought) * 100).toFixed(2);
+                        trade.status = 'closed';
+                    }
+                }
+                
+                // Save to localStorage
+                saveTradesToStorage();
+                
+                // Re-render table
+                renderTradesTable();
+                
+                // Show success notification
+                showNotification(tradeType === 'buy' ? 'Buy trade added successfully!' : 'Sell trade executed successfully!');
+                
+                // Reset form
+                resetForm();
+            });
+            
+            // Asset search functionality
+            document.getElementById('assetSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const options = assetSelect.querySelectorAll('option');
+                
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        option.style.display = '';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Refresh allocation button
+            document.getElementById('refreshAllocationBtn').addEventListener('click', updateAllocationChart);
+            
+            // Function to set current datetime
+            function updateDateTime() {
+                const now = new Date();
+                const timezoneOffset = now.getTimezoneOffset() * 60000;
+                const localISOTime = new Date(now - timezoneOffset).toISOString().slice(0, 16);
+                document.getElementById('date').value = localISOTime;
+            }
+            
+            // Show notification
+            function showNotification(message, isError = false) {
+                const notification = document.getElementById('notification');
+                notification.innerHTML = `<i class="fas fa-${isError ? 'exclamation-circle' : 'check-circle'}"></i> ${message}`;
+                notification.className = `notification ${isError ? 'error' : ''} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Calculate summary metrics
+            function calculateSummaryMetrics() {
+                let totalProfit = 0;
+                let totalFees = 0;
+                let totalInvestment = 0;
+                let totalReturn = 0;
+                let activeTrades = 0;
+                let closedTrades = 0;
+                
+                tradesData.forEach(trade => {
+                    // Calculate total profit from closed trades
+                    if (trade.status === 'closed') {
+                        totalProfit += trade.profit;
+                        closedTrades++;
+                        totalInvestment += trade.totalBought;
+                        totalReturn += trade.totalSold;
+                    } else {
+                        activeTrades++;
+                    }
+                    
+                    // Calculate fees
+                    if (trade.buyFee) {
+                        totalFees += trade.buyFee * trade.buyPrice;
+                    }
+                    if (trade.sellFee) {
+                        totalFees += trade.sellFee;
+                    }
+                });
+                
+                // Calculate ROI
+                let averageROI = 0;
+                if (totalInvestment > 0) {
+                    averageROI = ((totalReturn - totalInvestment) / totalInvestment) * 100;
+                }
+                
+                return {
+                    totalProfit,
+                    totalFees,
+                    averageROI,
+                    activeTrades,
+                    closedTrades
+                };
+            }
+            
+            // Update summary cards
+            function updateSummaryCards() {
+                const metrics = calculateSummaryMetrics();
+                
+                // Update top summary cards
+                document.getElementById('total-profit').innerHTML = 
+                    metrics.totalProfit >= 0 ? 
+                    `<span class="profit">+$${metrics.totalProfit.toFixed(2)}</span>` : 
+                    `<span class="loss">-$${Math.abs(metrics.totalProfit).toFixed(2)}</span>`;
+                
+                document.getElementById('total-fees').textContent = `$${metrics.totalFees.toFixed(2)}`;
+                document.getElementById('average-roi').textContent = `${metrics.averageROI.toFixed(2)}%`;
+                
+                // Update mini stats cards
+                document.getElementById('active-trades-count').textContent = metrics.activeTrades;
+                document.getElementById('closed-trades-count').textContent = metrics.closedTrades;
+                document.getElementById('total-profit-mini').innerHTML = 
+                    metrics.totalProfit >= 0 ? 
+                    `<span class="profit">+$${metrics.totalProfit.toFixed(2)}</span>` : 
+                    `<span class="loss">-$${Math.abs(metrics.totalProfit).toFixed(2)}</span>`;
+                document.getElementById('total-fees-mini').textContent = `$${metrics.totalFees.toFixed(2)}`;
+            }
+            
+            // Initialize allocation chart
+            function initAllocationChart() {
+                const allocCtx = document.getElementById('allocationChart').getContext('2d');
+                allocChart = new Chart(allocCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: [],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#e2e8f0',
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.parsed}% of portfolio`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                updateAllocationChart();
+            }
+            
+            // Update portfolio allocation chart with active holdings
+            function updateAllocationChart() {
+                // Aggregate active trades by asset
+                const holdings = {};
+                tradesData.forEach(trade => {
+                    if (trade.status === 'active') {
+                        const symbol = trade.asset.replace('USDT', '');
+                        if (!holdings[symbol]) {
+                            holdings[symbol] = 0;
+                        }
+                        holdings[symbol] += trade.coins;
+                    }
+                });
+                
+                // Calculate current value for each asset
+                let totalValue = 0;
+                const labels = [];
+                const values = [];
+                const backgroundColors = [];
+                
+                // Asset color mapping
+                const colorMap = {
+                    'BTC': '#f7931a',
+                    'ETH': '#627eea',
+                    'BNB': '#f3ba2f',
+                    'SOL': '#00ffa3',
+                    'ADA': '#0033ad',
+                    'XRP': '#23292f',
+                    'DOT': '#e6007a',
+                    'DOGE': '#c2a633'
+                };
+                
+                // Calculate current values
+                Object.keys(holdings).forEach(symbol => {
+                    const coins = holdings[symbol];
+                    const price = cryptoPrices[symbol] || 0;
+                    const value = coins * price;
+                    
+                    if (value > 0) {
+                        labels.push(symbol);
+                        values.push(value);
+                        backgroundColors.push(colorMap[symbol] || getRandomColor());
+                        totalValue += value;
+                    }
+                });
+                
+                // Calculate percentages
+                const percentages = values.map(value => (value / totalValue * 100).toFixed(2));
+                
+                // Update the chart
+                if (allocChart) {
+                    allocChart.data.labels = labels;
+                    allocChart.data.datasets[0].data = percentages;
+                    allocChart.data.datasets[0].backgroundColor = backgroundColors;
+                    allocChart.update();
+                }
+            }
+            
+            // Generate random color for allocation chart
+            function getRandomColor() {
+                const letters = '0123456789ABCDEF';
+                let color = '#';
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+            
+            // Initialize performance chart
+            function initPerformanceChart() {
+                const perfCtx = document.getElementById('performanceChart').getContext('2d');
+                const gradient = perfCtx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(41, 98, 255, 0.4)');
+                gradient.addColorStop(1, 'rgba(41, 98, 255, 0.05)');
+                
+                perfChart = new Chart(perfCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Portfolio Value',
+                            data: [],
+                            borderColor: '#2962ff',
+                            backgroundColor: gradient,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#2962ff',
+                            pointBorderColor: '#0f172a',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)'
+                                },
+                                ticks: {
+                                    color: '#94a3b8'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)'
+                                },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                updatePerformanceChart('all');
+            }
+            
+            // Update performance chart
+            function updatePerformanceChart(timePeriod) {
+                if (!perfChart) return;
+                
+                // Calculate portfolio value over time
+                const portfolioValues = [];
+                const labels = [];
+                let currentValue = 0;
+                
+                // Sort trades by date
+                const sortedTrades = [...tradesData].sort((a, b) => {
+                    const dateA = new Date(a.buyDate);
+                    const dateB = new Date(b.buyDate);
+                    return dateA - dateB;
+                });
+                
+                // Calculate portfolio value at each trade date
+                sortedTrades.forEach(trade => {
+                    // For buy trades
+                    if (trade.status === 'active') {
+                        currentValue += trade.coins * trade.buyPrice;
+                    }
+                    
+                    // For closed trades
+                    if (trade.status === 'closed') {
+                        currentValue += trade.profit;
+                    }
+                    
+                    portfolioValues.push(currentValue);
+                    labels.push(trade.buyDate);
+                });
+                
+                // Filter based on time period
+                const now = new Date();
+                let filteredValues = [...portfolioValues];
+                let filteredLabels = [...labels];
+                
+                if (timePeriod === '1m') {
+                    const oneMonthAgo = new Date();
+                    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                    filteredValues = portfolioValues.slice(-3);
+                    filteredLabels = labels.slice(-3);
+                } else if (timePeriod === '3m') {
+                    const threeMonthsAgo = new Date();
+                    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+                    filteredValues = portfolioValues.slice(-6);
+                    filteredLabels = labels.slice(-6);
+                } else if (timePeriod === '1y') {
+                    const oneYearAgo = new Date();
+                    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+                    filteredValues = portfolioValues.slice(-12);
+                    filteredLabels = labels.slice(-12);
+                }
+                
+                // Update chart
+                perfChart.data.labels = filteredLabels;
+                perfChart.data.datasets[0].data = filteredValues;
+                perfChart.update();
+            }
+            
+            // Start real-time price updates
+            function startPriceUpdates() {
+                // Clear any existing interval
+                if (priceUpdateInterval) clearInterval(priceUpdateInterval);
+                
+                // Update prices immediately and then every 3 seconds
+                fetchAllPrices();
+                priceUpdateInterval = setInterval(fetchAllPrices, 3000);
+            }
+            
+            // Fetch all prices from Binance API
+            function fetchAllPrices() {
+                // Get all unique symbols from active trades
+                const activeSymbols = [...new Set(tradesData
+                    .filter(trade => trade.status === 'active')
+                    .map(trade => trade.asset.replace('USDT', ''))
+                )];
+                
+                if (activeSymbols.length === 0) return;
+                
+                // Build the API URL
+                const symbolsParam = activeSymbols.map(s => `${s}USDT`).join(',');
+                const apiUrl = `https://api.binance.com/api/v3/ticker/price?symbols=["${symbolsParam.split(',').join('","')}"]`;
+                
+                axios.get(apiUrl)
+                    .then(response => {
+                        // Update current prices
+                        response.data.forEach(item => {
+                            const symbol = item.symbol.replace('USDT', '');
+                            currentPrices[symbol] = parseFloat(item.price);
+                        });
+                        
+                        // Update the table with new prices
+                        updateTablePrices();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching prices from Binance:', error);
+                    });
+            }
+            
+            // Update prices in the table
+            function updateTablePrices() {
+                const tableRows = document.querySelectorAll('#tradesTableBody tr');
+                
+                tableRows.forEach(row => {
+                    const tradeId = row.getAttribute('data-id');
+                    const trade = tradesData.find(t => t.id == tradeId);
+                    
+                    if (trade && trade.status === 'active') {
+                        const symbol = trade.asset.replace('USDT', '');
+                        const currentPrice = currentPrices[symbol] || 0;
+                        
+                        // Update current price cell
+                        const priceCell = row.querySelector('.current-price');
+                        if (priceCell) {
+                            priceCell.innerHTML = `<span class="price-update">$${currentPrice.toFixed(2)}</span>`;
+                        }
+                        
+                        // Update profit cell
+                        const profitCell = row.querySelector('.realtime-profit');
+                        if (profitCell) {
+                            // Calculate current value
+                            const currentValue = currentPrice * trade.coins;
+                            
+                            // Calculate total cost (including fees)
+                            const totalCost = trade.totalBought + (trade.buyFee * trade.buyPrice);
+                            
+                            // Calculate unrealized profit
+                            const unrealizedProfit = currentValue - totalCost;
+                            const profitPercentage = (unrealizedProfit / totalCost) * 100;
+                            
+                            profitCell.innerHTML = `
+                                <span class="${unrealizedProfit >= 0 ? 'positive' : 'negative'}">
+                                    ${unrealizedProfit >= 0 ? '+' : ''}$${unrealizedProfit.toFixed(2)}
+                                </span>
+                                <div class="profit-percentage ${unrealizedProfit >= 0 ? 'positive' : 'negative'}">
+                                    ${unrealizedProfit >= 0 ? '+' : ''}${profitPercentage.toFixed(2)}%
+                                </div>
+                            `;
+                        }
+                    }
+                });
+            }
+            
+            // Render trades table
+            function renderTradesTable() {
+                const tableBody = document.getElementById('tradesTableBody');
+                tableBody.innerHTML = '';
+                
+                // Calculate stats
+                let activeTrades = 0;
+                let closedTrades = 0;
+                let totalProfit = 0;
+                let totalFees = 0;
+                
+                tradesData.forEach(trade => {
+                    // Update stats
+                    if (trade.status === 'active') activeTrades++;
+                    if (trade.status === 'closed') closedTrades++;
+                    totalProfit += trade.profit;
+                    
+                    // Calculate fees
+                    if (trade.buyFee) {
+                        totalFees += trade.buyFee * trade.buyPrice;
+                    }
+                    if (trade.sellFee) {
+                        totalFees += trade.sellFee;
+                    }
+                    
+                    const isProfit = trade.profit > 0;
+                    const statusClass = trade.status === 'active' ? 'status-active' : 'status-closed';
+                    const symbol = trade.asset.replace('USDT', '');
+                    const currentPrice = currentPrices[symbol] || 0;
+                    
+                    // Calculate current value for active trades
+                    let currentValue = 0;
+                    let unrealizedProfit = 0;
+                    let profitPercentage = 0;
+                    
+                    if (trade.status === 'active') {
+                        currentValue = currentPrice * trade.coins;
+                        const totalCost = trade.totalBought + (trade.buyFee * trade.buyPrice);
+                        unrealizedProfit = currentValue - totalCost;
+                        profitPercentage = (unrealizedProfit / totalCost) * 100;
+                    }
+                    
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-id', trade.id);
+                    
+                    row.innerHTML = `
+                        <td>${trade.asset}</td>
+                        <td class="coin-amount">${trade.coins}</td>
+                        <td>${trade.buyDate}</td>
+                        <td>$${trade.buyPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td>${trade.buyFee ? trade.buyFee.toFixed(6) + ' ' + trade.asset.replace('USDT', '') : '-'}</td>
+                        <td>$${trade.totalBought.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="current-price">
+                            ${trade.status === 'active' ? 
+                                currentPrice ? `$${currentPrice.toFixed(2)}` : '<i class="fas fa-spinner fa-spin"></i>' 
+                                : 'N/A'}
+                        </td>
+                        <td>${trade.sellDate || '-'}</td>
+                        <td>${trade.sellPrice ? '$' + trade.sellPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-'}</td>
+                        <td>${trade.sellFee ? '$' + trade.sellFee.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-'}</td>
+                        <td>${trade.totalSold ? '$' + trade.totalSold.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-'}</td>
+                        <td class="realtime-profit">
+                            ${trade.status === 'closed' ? `
+                                <span class="${isProfit ? 'positive' : 'negative'}">${isProfit ? '+' : ''}$${trade.profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                                <div class="profit-percentage ${isProfit ? 'positive' : 'negative'}">${isProfit ? '+' : ''}${trade.profitPercentage}%</div>
+                            ` : `
+                                <span class="${unrealizedProfit >= 0 ? 'positive' : 'negative'}">${unrealizedProfit >= 0 ? '+' : ''}$${unrealizedProfit.toFixed(2)}</span>
+                                <div class="profit-percentage ${unrealizedProfit >= 0 ? 'positive' : 'negative'}">${unrealizedProfit >= 0 ? '+' : ''}${profitPercentage.toFixed(2)}%</div>
+                            `}
+                        </td>
+                        <td>
+                            <div class="trade-status ${statusClass}">${trade.status === 'active' ? 'Active' : 'Closed'}</div>
+                        </td>
+                        <td>
+                            <div class="actions-container">
+                                ${trade.status === 'active' ? `
+                                    <button class="action-btn edit-sell-btn" data-id="${trade.id}">
+                                        <i class="fas fa-dollar-sign"></i> Sell
+                                    </button>
+                                ` : ''}
+                                <button class="action-btn" data-id="${trade.id}">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="action-btn delete-btn" data-id="${trade.id}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="calculator-btn" data-id="${trade.id}">
+                                <i class="fas fa-calculator"></i> Calculator
+                            </button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                // Update summary cards
+                updateSummaryCards();
+                
+                // Update performance chart
+                updatePerformanceChart('all');
+                
+                // Update allocation chart
+                updateAllocationChart();
+                
+                // Add event listeners to action buttons
+                document.querySelectorAll('.action-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const tradeId = this.getAttribute('data-id');
+                        const trade = tradesData.find(t => t.id == tradeId);
+                        
+                        if (trade) {
+                            if (this.classList.contains('edit-sell-btn')) {
+                                // Prepare form for selling
+                                document.getElementById('tradeType').value = 'sell';
+                                document.getElementById('asset').value = trade.asset;
+                                document.getElementById('coinUnit').textContent = trade.asset.replace('USDT', '');
+                                
+                                // Set active trade ID in hidden field
+                                document.getElementById('activeTradeId').value = trade.id;
+                                
+                                // Hide dropdown since we're pre-selecting
+                                document.getElementById('activeTradesContainer').style.display = 'none';
+                                
+                                document.getElementById('form-status-indicator').textContent = 'Sell Trade';
+                                document.getElementById('tradeId').value = trade.id;
+                                
+                                // Set fee label to USDT for sell
+                                document.getElementById('feeLabel').textContent = 'Fee (USDT)';
+                                
+                                // Pre-fill coin amount with the trade's coin amount
+                                document.getElementById('coinAmount').value = trade.coins;
+                                
+                                // Scroll to form
+                                document.getElementById('trade-form-container').scrollIntoView({ behavior: 'smooth' });
+                            } else if (this.classList.contains('delete-btn')) {
+                                // Show delete confirmation
+                                tradeToDeleteId = tradeId;
+                                document.getElementById('modalMessage').innerHTML = `
+                                    Are you sure you want to delete this trade?<br><br>
+                                    <strong>${trade.asset} - ${trade.coins} coins</strong><br>
+                                    Bought on ${trade.buyDate}
+                                `;
+                                document.getElementById('confirmationModal').classList.add('show');
+                            } else {
+                                // Prepare form for editing buy
+                                document.getElementById('tradeType').value = 'buy';
+                                document.getElementById('asset').value = trade.asset;
+                                document.getElementById('coinAmount').value = trade.coins;
+                                document.getElementById('price').value = trade.buyPrice;
+                                document.getElementById('fee').value = trade.buyFee;
+                                document.getElementById('activeTradesContainer').style.display = 'none';
+                                document.getElementById('form-status-indicator').textContent = 'Edit Buy Trade';
+                                document.getElementById('tradeId').value = trade.id;
+                                
+                                // Update fee label to match asset
+                                const baseCoin = trade.asset.replace('USDT', '');
+                                document.getElementById('feeLabel').textContent = `Fee (${baseCoin})`;
+                                
+                                // Set date to today for editing
+                                updateDateTime();
+                                
+                                // Scroll to form
+                                document.getElementById('trade-form-container').scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }
+                    });
+                });
+                
+                // Add event listeners to calculator buttons
+                document.querySelectorAll('.calculator-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.getElementById('calculatorModal').classList.add('show');
+                    });
+                });
+            }
+            
+            // Initialize calculator
+            function initCalculator() {
+                // Calculator buttons
+                document.querySelectorAll('.calc-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const action = this.getAttribute('data-action');
+                        handleCalculatorAction(action);
+                    });
+                });
+                
+                // Compounding calculator
+                document.getElementById('calculateCompoundBtn').addEventListener('click', calculateCompoundInterest);
+                
+                // Trade calculator
+                document.getElementById('calculateTradeBtn').addEventListener('click', calculateTradeProfit);
+                
+                // Close calculator
+                document.getElementById('closeCalcBtn').addEventListener('click', function() {
+                    document.getElementById('calculatorModal').classList.remove('show');
+                });
+            }
+            
+            // Handle calculator actions
+            function handleCalculatorAction(action) {
+                if (action === 'clear') {
+                    currentDisplay = '0';
+                    firstOperand = null;
+                    operator = null;
+                    waitingForSecondOperand = false;
+                } else if (action === 'backspace') {
+                    currentDisplay = currentDisplay.length > 1 ? currentDisplay.slice(0, -1) : '0';
+                } else if (action === 'percentage') {
+                    const value = parseFloat(currentDisplay);
+                    currentDisplay = (value / 100).toString();
+                } else if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
+                    const inputValue = parseFloat(currentDisplay);
+                    
+                    if (firstOperand === null) {
+                        firstOperand = inputValue;
+                    } else if (operator) {
+                        const result = performCalculation();
+                        currentDisplay = String(result);
+                        firstOperand = result;
+                    }
+                    
+                    operator = action;
+                    waitingForSecondOperand = true;
+                } else if (action === 'equals') {
+                    if (operator && firstOperand !== null) {
+                        const result = performCalculation();
+                        currentDisplay = String(result);
+                        firstOperand = null;
+                        operator = null;
+                        waitingForSecondOperand = false;
+                    }
+                } else if (action === 'decimal') {
+                    if (!currentDisplay.includes('.')) {
+                        currentDisplay += '.';
+                    }
+                } else {
+                    if (currentDisplay === '0' || waitingForSecondOperand) {
+                        currentDisplay = action;
+                        waitingForSecondOperand = false;
+                    } else {
+                        currentDisplay += action;
+                    }
+                }
+                
+                document.getElementById('display').textContent = currentDisplay;
+            }
+            
+            // Perform calculation
+            function performCalculation() {
+                const inputValue = parseFloat(currentDisplay);
+                
+                if (operator === 'add') {
+                    return firstOperand + inputValue;
+                } else if (operator === 'subtract') {
+                    return firstOperand - inputValue;
+                } else if (operator === 'multiply') {
+                    return firstOperand * inputValue;
+                } else if (operator === 'divide') {
+                    return firstOperand / inputValue;
+                }
+                
+                return inputValue;
+            }
+            
+            // Calculate compound interest
+            function calculateCompoundInterest() {
+                const principal = parseFloat(document.getElementById('initialInvestment').value) || 0;
+                const interestRate = parseFloat(document.getElementById('interestRate').value) / 100 || 0;
+                const interestPeriod = document.getElementById('interestPeriod').value;
+                const compoundingFreq = parseFloat(document.getElementById('compoundingFreq').value) || 1;
+                const timePeriod = parseFloat(document.getElementById('timePeriod').value) || 0;
+                const timePeriodType = document.getElementById('timePeriodType').value;
+                const periodContribution = parseFloat(document.getElementById('periodContribution').value) || 0;
+                
+                // Convert time period to years based on type
+                let years = timePeriod;
+                if (timePeriodType === 'days') {
+                    years = timePeriod / 365;
+                } else if (timePeriodType === 'months') {
+                    years = timePeriod / 12;
+                }
+                
+                // Adjust interest rate based on period
+                let adjustedRate = interestRate;
+                if (interestPeriod === 'daily') {
+                    adjustedRate = interestRate * 365;
+                } else if (interestPeriod === 'weekly') {
+                    adjustedRate = interestRate * 52;
+                } else if (interestPeriod === 'monthly') {
+                    adjustedRate = interestRate * 12;
+                }
+                
+                // Calculate compound interest
+                let amount = principal;
+                const results = [];
+                const n = compoundingFreq;
+                const ratePerPeriod = adjustedRate / 100 / n;
+                const totalPeriods = n * years;
+                
+                for (let period = 1; period <= totalPeriods; period++) {
+                    const startBalance = amount;
+                    
+                    // Apply interest
+                    amount *= (1 + ratePerPeriod);
+                    
+                    // Add contribution at the end of each period
+                    amount += periodContribution;
+                    
+                    const interestEarned = amount - startBalance - periodContribution;
+                    
+                    results.push({
+                        period,
+                        startBalance,
+                        contributions: periodContribution,
+                        interestEarned,
+                        endBalance: amount
+                    });
+                }
+                
+                // Update UI
+                const finalBalance = amount;
+                const totalContributions = principal + (periodContribution * totalPeriods);
+                const totalInterest = finalBalance - totalContributions;
+                
+                document.getElementById('finalBalance').textContent = `$${finalBalance.toFixed(2)}`;
+                document.getElementById('totalContributions').textContent = `$${totalContributions.toFixed(2)}`;
+                document.getElementById('totalInterest').textContent = `$${totalInterest.toFixed(2)}`;
+                
+                // Update table
+                const tableBody = document.getElementById('compoundTableBody');
+                tableBody.innerHTML = '';
+                
+                // Only show up to 50 periods to avoid performance issues
+                const maxPeriodsToShow = 50;
+                const periodStep = Math.max(1, Math.floor(totalPeriods / maxPeriodsToShow));
+                
+                for (let i = 0; i < results.length; i += periodStep) {
+                    const result = results[i];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${result.period}</td>
+                        <td>$${result.startBalance.toFixed(2)}</td>
+                        <td>$${result.contributions.toFixed(2)}</td>
+                        <td>$${result.interestEarned.toFixed(2)}</td>
+                        <td>$${result.endBalance.toFixed(2)}</td>
+                    `;
+                    tableBody.appendChild(row);
+                }
+                
+                // Add the last period if not already included
+                if (results.length > 0 && (results.length - 1) % periodStep !== 0) {
+                    const lastResult = results[results.length - 1];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${lastResult.period}</td>
+                        <td>$${lastResult.startBalance.toFixed(2)}</td>
+                        <td>$${lastResult.contributions.toFixed(2)}</td>
+                        <td>$${lastResult.interestEarned.toFixed(2)}</td>
+                        <td>$${lastResult.endBalance.toFixed(2)}</td>
+                    `;
+                    tableBody.appendChild(row);
+                }
+            }
+            
+            // Calculate trade profit
+            function calculateTradeProfit() {
+                const buyPrice = parseFloat(document.getElementById('tradeBuyPrice').value) || 0;
+                const sellPrice = parseFloat(document.getElementById('tradeSellPrice').value) || 0;
+                const coinAmount = parseFloat(document.getElementById('tradeCoinAmount').value) || 1;
+                const feePercent = parseFloat(document.getElementById('tradeFeePercent').value) || 0.1;
+                
+                const investment = buyPrice * coinAmount;
+                const revenue = sellPrice * coinAmount;
+                const fees = (investment + revenue) * (feePercent / 100);
+                const profit = revenue - investment - fees;
+                const roi = (profit / investment) * 100;
+                
+                document.getElementById('calcInvestment').textContent = `$${investment.toFixed(2)}`;
+                document.getElementById('calcRevenue').textContent = `$${revenue.toFixed(2)}`;
+                document.getElementById('calcFees').textContent = `$${fees.toFixed(2)}`;
+                document.getElementById('calcTradeProfit').textContent = `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
+                document.getElementById('calcTradeProfit').className = `calc-value ${profit >= 0 ? 'positive-result' : 'negative-result'}`;
+                document.getElementById('calcTradeROI').textContent = `${roi.toFixed(2)}%`;
+                document.getElementById('calcTradeROI').className = `calc-value ${roi >= 0 ? 'positive-result' : 'negative-result'}`;
+            }
+            
+            // Delete trade functionality
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                if (tradeToDeleteId) {
+                    const index = tradesData.findIndex(t => t.id == tradeToDeleteId);
+                    if (index !== -1) {
+                        // Remove trade
+                        tradesData.splice(index, 1);
+                        saveTradesToStorage();
+                        renderTradesTable();
+                        showNotification('Trade deleted successfully');
+                    }
+                }
+                closeConfirmationModal();
+            });
+            
+            document.getElementById('cancelDeleteBtn').addEventListener('click', closeConfirmationModal);
+            
+            function closeConfirmationModal() {
+                document.getElementById('confirmationModal').classList.remove('show');
+                tradeToDeleteId = null;
+            }
+            
+            // Update active trades dropdown
+            function updateActiveTradesDropdown(asset) {
+                const dropdown = document.getElementById('activeTrades');
+                dropdown.innerHTML = '<option value="">Select an active trade</option>';
+                
+                const activeTrades = tradesData.filter(t => 
+                    t.asset === asset && t.status === 'active'
+                );
+                
+                activeTrades.forEach(trade => {
+                    const option = document.createElement('option');
+                    option.value = trade.id;
+                    option.textContent = `${trade.asset} - ${trade.coins} coins (Bought: ${trade.buyDate})`;
+                    dropdown.appendChild(option);
+                });
+            }
+            
+            // Reset form
+            function resetForm() {
+                document.getElementById('tradeForm').reset();
+                document.getElementById('tradeId').value = '';
+                document.getElementById('activeTradeId').value = '';
+                document.getElementById('activeTradesContainer').style.display = 'none';
+                document.getElementById('form-status-indicator').textContent = 'New Trade';
+                document.getElementById('tradeType').value = 'buy';
+                document.getElementById('asset').value = allBinancePairs.length > 0 ? allBinancePairs[0] : 'BTCUSDT';
+                document.getElementById('coinUnit').textContent = allBinancePairs.length > 0 ? allBinancePairs[0].replace('USDT', '') : 'BTC';
+                document.getElementById('feeLabel').textContent = allBinancePairs.length > 0 ? `Fee (${allBinancePairs[0].replace('USDT', '')})` : 'Fee (BTC)';
+                document.getElementById('assetSearch').value = '';
+                updateDateTime();
+            }
+            
+            // Load Binance USDT pairs
+            function loadBinancePairs() {
+                const assetSelect = document.getElementById('asset');
+                assetSelect.innerHTML = '';
+                
+                // Simulated list of all Binance USDT pairs (abbreviated for demo)
+                allBinancePairs = [
+                    'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'ADAUSDT', 'XRPUSDT', 
+                    'DOTUSDT', 'DOGEUSDT', 'AVAXUSDT', 'MATICUSDT', 'LTCUSDT', 'TRXUSDT', 'DEGOUSDT', 'ASRUSDT', 'CHESSUSDT'
+                ];
+                
+                // Populate dropdown
+                allBinancePairs.forEach(pair => {
+                    const option = document.createElement('option');
+                    option.value = pair;
+                    option.textContent = pair;
+                    assetSelect.appendChild(option);
+                });
+                
+                // Set default value
+                if (allBinancePairs.length > 0) {
+                    assetSelect.value = allBinancePairs[0];
+                    const baseCoin = allBinancePairs[0].replace('USDT', '');
+                    document.getElementById('coinUnit').textContent = baseCoin;
+                    document.getElementById('feeLabel').textContent = `Fee (${baseCoin})`;
+                }
+            }
+            
+            // Save trades to localStorage
+            function saveTradesToStorage() {
+                localStorage.setItem('crypto_trades', JSON.stringify({
+                    tradesData: tradesData,
+                    nextTradeId: nextTradeId
+                }));
+            }
+            
+            // Load trades from localStorage
+            function loadTradesFromStorage() {
+                const savedData = localStorage.getItem('crypto_trades');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    tradesData = data.tradesData || [];
+                    nextTradeId = data.nextTradeId || 1;
+                } else {
+                    // Sample initial trade data if nothing saved
+                    tradesData = [
+                        {
+                            id: 1,
+                            asset: 'BTCUSDT',
+                            coins: 0.25,
+                            buyDate: "Jun 15, 2023",
+                            buyPrice: 30184.22,
+                            buyFee: 0.000414,
+                            totalBought: 7558.56,
+                            sellDate: "Jun 20, 2023",
+                            sellPrice: 31200.50,
+                            sellFee: 10.00,
+                            totalSold: 7790.13,
+                            profit: 231.57,
+                            profitPercentage: 3.06,
+                            status: 'closed'
+                        },
+                        {
+                            id: 2,
+                            asset: 'ETHUSDT',
+                            coins: 2.5,
+                            buyDate: "Jun 10, 2023",
+                            buyPrice: 1720.50,
+                            buyFee: 0.0048,
+                            totalBought: 4309.50,
+                            sellDate: "",
+                            sellPrice: 0,
+                            sellFee: 0,
+                            totalSold: 0,
+                            profit: 0,
+                            profitPercentage: 0,
+                            status: 'active'
+                        },
+                        {
+                            id: 3,
+                            asset: 'SOLUSDT',
+                            coins: 12.5,
+                            buyDate: "Jun 8, 2023",
+                            buyPrice: 18.64,
+                            buyFee: 0.187,
+                            totalBought: 236.50,
+                            sellDate: "Jun 12, 2023",
+                            sellPrice: 20.25,
+                            sellFee: 2.25,
+                            totalSold: 250.13,
+                            profit: 13.63,
+                            profitPercentage: 5.76,
+                            status: 'closed'
+                        },
+                        {
+                            id: 4,
+                            asset: 'ADAUSDT',
+                            coins: 5000,
+                            buyDate: "Jun 5, 2023",
+                            buyPrice: 0.45,
+                            buyFee: 2.25,
+                            totalBought: 2250.00,
+                            sellDate: "",
+                            sellPrice: 0,
+                            sellFee: 0,
+                            totalSold: 0,
+                            profit: 0,
+                            profitPercentage: 0,
+                            status: 'active'
+                        }
+                    ];
+                    
+                    nextTradeId = 5;
+                }
+                
+                // Load Binance pairs
+                loadBinancePairs();
+                
+                // Render trades table
+                renderTradesTable();
+            }
+            
+            // Initialize date field and table
+            updateDateTime();
+        });
+    </script>
+</body>
+</html>
